@@ -1,23 +1,35 @@
 @echo off
+cd /d "%~dp0"
+
+:: Check for Administrator privileges
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo ========================================
+    echo   Trust ExploreDB Development Certificate
+    echo ========================================
+    echo.
+    echo This script needs Administrator rights to safely install the certificate.
+    echo A Windows UAC prompt will appear. Please click "Yes".
+    echo.
+    pause
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    exit /b
+)
+
+:: If we reach here, we are running as Administrator
 echo ========================================
 echo   Trust ExploreDB Development Certificate
 echo ========================================
 echo.
-echo This script will securely install the ExploreDB certificate
-echo into your computer's Trusted Root Certification Authorities.
+echo Installing certificate securely...
 echo.
-echo This is required (one-time only) to install the app safely.
-echo.
-echo INSTRUCTIONS:
-echo 1. Press ENTER on your keyboard right now.
-echo 2. A Windows Administrator prompt (UAC) will appear.
-echo 3. Please click "Yes" to allow the installation.
-echo 4. A blue window will briefly appear to confirm success.
-echo.
-pause
 
-powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-Command', 'Import-PfxCertificate -FilePath ''%~dp0ExploreDB.pfx'' -CertStoreLocation Cert:\LocalMachine\Root -Password (ConvertTo-SecureString -String password -Force -AsPlainText); Write-Host \"\" ; Write-Host \"SUCCESS: Certificate installed perfectly!\" -ForegroundColor Green; Write-Host \"You may now close this blue window and install the app.\" -ForegroundColor Cyan; pause'"
+certutil -p "password" -importpfx Root "%~dp0ExploreDB.pfx"
 
 echo.
-echo Process complete! If the blue window said SUCCESS, you can now install the app.
+echo ========================================
+echo SUCCESS! Certificate installed perfectly!
+echo You may now close this window and double-click ExploreDB.msix to install!
+echo ========================================
+echo.
 pause
